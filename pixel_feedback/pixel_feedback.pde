@@ -46,9 +46,9 @@ void preset() {
 }
 
 void setup() {
-  size(800, 800);
+  size(640, 640);
   preset();
-  xSize = ySize = 80;
+  xSize = ySize = 64;
 
   viewerWidth = xSize * 4;
   viewerHeight = ySize * 8;

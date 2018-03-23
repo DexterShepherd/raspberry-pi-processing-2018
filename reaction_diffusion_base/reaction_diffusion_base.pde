@@ -1,18 +1,14 @@
 float[][] aLevel;
 float[][] bLevel;
-float[][] hues;
 
 float[][] lastALevel;
 float[][] lastBLevel;
-float[][][] history;
 
 float[] kernal = {
   0.05,  0.2, 0.05,
   0.2,  -1.0, 0.2,
   0.05,  0.2, 0.05
-};
-
-float speed = 0.4;
+}; 
 
 int[] n = {
   -1, -1,  -1, 0,  -1, 1,
@@ -27,7 +23,6 @@ float dA, dB, feed, k;
 
 void setup() {
   size(640, 640);
-  colorMode(HSB, 360, 100, 100);
   xSize = ySize = 64;
 
   cellWidth = width / xSize;
@@ -35,12 +30,9 @@ void setup() {
 
   aLevel = new float[xSize][ySize];
   bLevel = new float[xSize][ySize];
-  hues = new float[xSize][ySize];
 
   lastALevel = new float[xSize][ySize];
   lastBLevel = new float[xSize][ySize];
-
-  history = new float[10][xSize][ySize];
 
   for( int i = 0; i < xSize; i += 1 ) {
     for( int j = 0; j < ySize; j += 1 ) {
@@ -53,8 +45,8 @@ void setup() {
 
   setDefault();
   kernal = defaultKernal();
-  /* walkKernal(2); */
-  initBlobs(10);
+  walkKernal(3);
+  initBlobs(4);
 
   noStroke();
 }
@@ -100,8 +92,8 @@ void update() {
         lapB += lastBLevel[wrapX(i + n[k * 2])][wrapY(j + n[(k * 2) + 1])] * kernal[k];
       }
 
-      float newA = a + ( tempDA * lapA - a * b * b + feed * ( 1 - a ) ) * speed;
-      float newB = b + ( tempDB * lapB + a * b * b - ( k + feed ) * b ) * speed;
+      float newA = a + ( tempDA * lapA - a * b * b + feed * ( 1 - a ) ) * 0.4;
+      float newB = b + ( tempDB * lapB + a * b * b - ( k + feed ) * b ) * 0.4;
 
       aLevel[i][j] = constrain(newA, 0, 1);
       bLevel[i][j] = constrain(newB, 0, 1);
@@ -110,41 +102,17 @@ void update() {
 }
 
 void draw() {
-  if ( frameCount == 1 ) {
-    background(100, 0, 100);
-    for(int i = 0; i < xSize; i += 1) {
-      for(int j = 0; j < ySize; j += 1) {
-        hues[i][j] = 100;
-      }
-    }
-  }
-
   update();
   swap();
 
   for( int i = 0; i < xSize; i += 1 ) {
     for( int j = 0; j < ySize; j += 1 ) {
-
-      float hueVal;
-      if(frameCount > history.length) {
-        hueVal = (history[j > 32 ? 0 : 9][wrapX(i + 5)][wrapY(j)] + frameCount * 0.0001) % 1 * 360;
-      } else {
-        hueVal = (bLevel[wrapX(i + 10)][wrapY(j)] + frameCount * 0.0001) % 1 * 360;
-      }
-
-      float col = map(hueVal, 0, 360, 200, 360);
-
-      fill(col, 40, map(hueVal + 50, 0, 360, 80, 100), 10);
-
-      rect(
-        i * cellWidth,
-        j * cellHeight,
-        cellWidth, cellHeight
-      );
+      
+      float val = bLevel[i][j] - aLevel[i][j];
+      fill(( val * val * val ) * 255);
+      rect(i * cellWidth, j * cellHeight, cellWidth + 1, cellHeight + 1);
     }
   }
-
-  history[frameCount % history.length] = aLevel;
 }
 
 void swap() {
@@ -157,10 +125,24 @@ void swap() {
 }
 
 void setDefault() {
-  dA = 0.71;
-  dB = 0.7;
+  dA = 0.8;
+  dB = 0.5;
   feed = 0.055;
   k = 0.062;
+}
+
+/* void setDefault() { */
+/*   dA = 1.0; */
+/*   dB = 0.5; */
+/*   feed = 0.055; */
+/*   k = 0.062; */
+/* } */
+
+void setRandom() {
+  dA = random(1.0, 1.5);
+  dB = random(1.5, 2.0);
+  feed = random(0.1);
+  k = random(0.1);
 }
 
 int wrapX(int i) {
@@ -171,18 +153,27 @@ int wrapY(int i) {
   return ( ySize + ( i % ySize )) % ySize;
 }
 
-int wrapX(float f) {
-  int i = floor(f);
-  return ( xSize + ( i % xSize )) % xSize;
-}
-
-int wrapY(float f) {
-  int i = floor(f);
-  return ( ySize + ( i % ySize )) % ySize;
-}
-
 void mouseClicked() {
   setup();
+}
+
+void randomKernal() {
+  float total = 0;
+  for(int i = 0; i < 8; i += 1) {
+    float val;
+    if ( total != 0 ) {
+      /* println("!!"); */
+      val = random(0, total) * -1.1;
+    }
+    else {
+      println("!");
+      val = random(-1, 1);
+    }
+    kernal[i] = val;
+    total += val;
+  }
+  kernal[8] = -total;
+  kernal = shuffle(kernal);
 }
 
 void walkKernal(int iterations) {

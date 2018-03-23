@@ -47,6 +47,8 @@ void preset() {
 
 void setup() {
   size(640, 640);
+  // fullScreen();
+  noCursor();
   preset();
   xSize = ySize = 64;
 
